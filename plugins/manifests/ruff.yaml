@@ -1,0 +1,17 @@
+id: ruff
+version: "0.x"
+# Ruff lints (and checks formatting of) Python, preferring the repo's own config
+# (plan §5). Emits SARIF.
+image: ghcr.io/gatehouse/run-python@sha256:0000000000000000000000000000000000000000000000000000000000000000
+family: quality
+category: [lint, format]
+applies_when:
+  languages: [Python]
+network: none
+command: ["sh", "-c", "ruff check /src --output-format sarif -o /out/ruff.sarif || true"]
+host_command: ["sh", "-c", "ruff check /src --output-format sarif -o /out/ruff.sarif || true"]
+outputs:
+  - path: /out/ruff.sarif
+    format: sarif
+timeout: 5m
+respects_repo_config: [ruff.toml, pyproject.toml]

@@ -1,0 +1,15 @@
+{{define "policies"}}{{template "head" .}}
+<h1>Policies</h1>
+<h2>Built-in packs</h2>
+<p class="muted">Select packs per repo in <code>gatehouse.yaml</code>
+(<code>policy_packs: [baseline, …]</code>). Layers stack: later packs tighten earlier ones.</p>
+<table>
+  <tr><th>Pack</th><th>Role</th></tr>
+  {{range .Packs}}<tr><td><code>{{.Name}}</code></td><td>{{.Role}}</td></tr>{{end}}
+</table>
+<h2>Repo policy layer</h2>
+<p class="muted">A repository can add its own rules in
+<code>.gatehouse/policies/</code> — <code>*.rego</code> (full Rego) or
+<code>*.yaml</code> (the simple rule DSL, compiled to Rego). These travel with
+the code and go through normal review.</p>
+{{template "foot" .}}{{end}}

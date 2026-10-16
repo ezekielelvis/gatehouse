@@ -1,0 +1,19 @@
+id: gremlins
+version: "0.x"
+# Gremlins is a mutation-testing tool for Go (plan §8). Mutation testing is slow,
+# so it is off by default and enabled per repo (gatehouse.yaml plugins.gremlins.enabled
+# or the release profile). The command wraps gremlins to emit the normalised
+# mutation report Gatehouse ingests.
+image: ghcr.io/gatehouse/run-go@sha256:0000000000000000000000000000000000000000000000000000000000000000
+family: test
+category: [mutation]
+default_off: true   # opt-in: enable via gatehouse.yaml plugins.gremlins.enabled
+applies_when:
+  languages: [Go]
+network: none
+command: ["sh", "-c", "gremlins unleash /src --output /out/gremlins.json || true; gatehouse-mutation-normalise /out/gremlins.json > /out/mutation.json || true"]
+host_command: ["sh", "-c", "echo '{\"killed\":0,\"total\":0}' > /out/mutation.json"]
+outputs:
+  - path: /out/mutation.json
+    format: mutation
+timeout: 30m

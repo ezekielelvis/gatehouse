@@ -1,0 +1,16 @@
+id: hadolint
+version: "2.x"
+# Hadolint lints Dockerfiles for anti-patterns and security issues (plan §6
+# family 10). Emits SARIF.
+image: ghcr.io/gatehouse/tools-core@sha256:0000000000000000000000000000000000000000000000000000000000000000
+family: container
+category: [container]
+applies_when:
+  manifests: [Dockerfile]
+network: none
+command: ["sh", "-c", "hadolint --format sarif /src/Dockerfile > /out/hadolint.sarif"]
+host_command: ["sh", "-c", "hadolint --format sarif /src/Dockerfile > /out/hadolint.sarif"]
+outputs:
+  - path: /out/hadolint.sarif
+    format: sarif
+timeout: 2m

@@ -1,0 +1,16 @@
+id: gosec
+version: "2.x"
+# gosec is Go-specific SAST (plan §6, family 2): idiomatic Go security issues
+# (weak crypto, SQL injection, unhandled errors, hard-coded creds). Emits SARIF.
+image: ghcr.io/gatehouse/run-go@sha256:0000000000000000000000000000000000000000000000000000000000000000
+family: sast
+category: [sast]
+applies_when:
+  languages: [Go]
+network: none
+command: ["gosec", "-fmt=sarif", "-out=/out/gosec.sarif", "-no-fail", "/src/..."]
+host_command: ["gosec", "-fmt=sarif", "-out=/out/gosec.sarif", "-no-fail", "./..."]
+outputs:
+  - path: /out/gosec.sarif
+    format: sarif
+timeout: 5m

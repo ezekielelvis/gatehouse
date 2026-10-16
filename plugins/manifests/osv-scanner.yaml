@@ -1,0 +1,17 @@
+id: osv-scanner
+version: "2.x"
+# OSV-Scanner finds known CVEs/GHSAs in direct and transitive dependencies
+# (plan §6, family 5). It runs against a locally mirrored OSV database so the
+# execute phase stays offline (--offline uses the DB staged into the image/cache).
+image: ghcr.io/gatehouse/tools-core@sha256:0000000000000000000000000000000000000000000000000000000000000000
+family: vulnerability
+category: [sca]
+applies_when:
+  manifests: [go.mod, package.json, requirements.txt, pyproject.toml, Cargo.toml, pom.xml, composer.json, Gemfile]
+network: none
+command: ["osv-scanner", "scan", "source", "--offline", "--format=sarif", "--output=/out/osv.sarif", "/src"]
+host_command: ["osv-scanner", "scan", "source", "--offline", "--format=sarif", "--output=/out/osv.sarif", "/src"]
+outputs:
+  - path: /out/osv.sarif
+    format: sarif
+timeout: 10m

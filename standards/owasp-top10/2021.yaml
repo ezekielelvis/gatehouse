@@ -1,0 +1,48 @@
+id: owasp-top10
+title: OWASP Top 10
+version: "2021"
+# Each control lists the CWE IDs, check/rule IDs, and finding families that
+# provide automated evidence. A control with automatable: no can only be
+# satisfied by human attestation (plan §7 — never overstate automated coverage).
+controls:
+  - id: A01
+    title: Broken Access Control
+    automatable: partial
+    cwes: [CWE-22, CWE-284, CWE-285, CWE-639, CWE-862, CWE-863]
+  - id: A02
+    title: Cryptographic Failures
+    automatable: partial
+    cwes: [CWE-259, CWE-321, CWE-326, CWE-327, CWE-331, CWE-798]
+    families: [secret]
+  - id: A03
+    title: Injection
+    automatable: partial
+    cwes: [CWE-77, CWE-78, CWE-79, CWE-89, CWE-90, CWE-91, CWE-94]
+  - id: A04
+    title: Insecure Design
+    automatable: "no"
+  - id: A05
+    title: Security Misconfiguration
+    automatable: partial
+    cwes: [CWE-16, CWE-611, CWE-732]
+    families: [iac, container]
+  - id: A06
+    title: Vulnerable and Outdated Components
+    automatable: "yes"
+    families: [vulnerability]
+  - id: A07
+    title: Identification and Authentication Failures
+    automatable: partial
+    cwes: [CWE-287, CWE-306, CWE-307, CWE-798]
+  - id: A08
+    title: Software and Data Integrity Failures
+    automatable: partial
+    cwes: [CWE-345, CWE-494, CWE-502]
+  - id: A09
+    title: Security Logging and Monitoring Failures
+    automatable: "no"
+    cwes: [CWE-117, CWE-778]
+  - id: A10
+    title: Server-Side Request Forgery (SSRF)
+    automatable: partial
+    cwes: [CWE-918]

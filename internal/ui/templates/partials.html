@@ -1,0 +1,58 @@
+{{define "head"}}<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{.Title}} · Gatehouse</title>
+<script src="/static/htmx.min.js" defer></script>
+<style>
+:root{color-scheme:light dark}
+*{box-sizing:border-box}
+body{font:14px/1.5 system-ui,sans-serif;margin:0;color:#1a1a1a;background:#fafafa}
+@media (prefers-color-scheme:dark){body{color:#e6e6e6;background:#16181d}
+  header{background:#1f232b!important;border-color:#2a2f38!important}
+  table{background:#1c1f26!important}td,th{border-color:#2a2f38!important}
+  .card{background:#1c1f26!important;border-color:#2a2f38!important}
+  a{color:#7bb0ff!important}}
+header{background:#fff;border-bottom:1px solid #e3e3e3;padding:.8rem 1.5rem;display:flex;align-items:center;gap:1.5rem}
+header .brand{font-weight:700;font-size:1.05rem}
+header nav a{color:#333;text-decoration:none;margin-right:1rem}
+main{max-width:1100px;margin:1.5rem auto;padding:0 1.5rem}
+h1{font-size:1.4rem;margin:.2rem 0 1rem}
+h2{font-size:1.05rem;margin:1.6rem 0 .6rem}
+table{border-collapse:collapse;width:100%;background:#fff}
+td,th{text-align:left;padding:.45rem .7rem;border-bottom:1px solid #ececec;vertical-align:top}
+th{font-weight:600;font-size:.82rem;text-transform:uppercase;letter-spacing:.03em;color:#777}
+code{font-family:ui-monospace,monospace;font-size:.85em}
+a{color:#0a58ca}
+.verdict{display:inline-block;padding:.15rem .6rem;border-radius:999px;font-weight:700;font-size:.8rem}
+.pass{background:#d7f0dd;color:#137333}.warn{background:#fdecc8;color:#8a5a00}.fail{background:#fbd9d7;color:#c5221f}
+@media (prefers-color-scheme:dark){.pass{background:#143d22;color:#7ee29a}.warn{background:#3d3012;color:#f3cd7a}.fail{background:#3d1a18;color:#ff9a93}}
+.sev{font-weight:600}.sev-critical{color:#b1060f}.sev-high{color:#d1434b}.sev-medium{color:#b06000}.sev-low{color:#5f6b7a}
+.status-new{font-weight:700}
+.banner{padding:1rem 1.2rem;border-radius:10px;margin:.5rem 0 1rem;border:1px solid}
+.banner.pass{border-color:#9bd6ab}.banner.warn{border-color:#e6c270}.banner.fail{border-color:#e39b97}
+.card{background:#fff;border:1px solid #ececec;border-radius:10px;padding:1rem 1.2rem;margin:.6rem 0}
+.muted{color:#888}
+.filters{display:flex;gap:.5rem;flex-wrap:wrap;margin:.6rem 0}
+.filters select{padding:.3rem .5rem;border-radius:6px;border:1px solid #ccc;background:transparent;color:inherit}
+.grid{display:flex;gap:1rem;flex-wrap:wrap}
+.stat{flex:1;min-width:140px}.stat .n{font-size:1.6rem;font-weight:700}
+ul.msgs{margin:.3rem 0;padding-left:1.1rem}
+</style>
+</head>
+<body>
+<header>
+  <span class="brand">🛡 Gatehouse</span>
+  <nav>
+    <a href="/">Dashboard</a>
+    <a href="/history">History</a>
+    <a href="/waivers">Waivers</a>
+    <a href="/policies">Policies</a>
+    <a href="/settings">Settings</a>
+  </nav>
+</header>
+<main>
+{{end}}
+
+{{define "foot"}}</main></body></html>{{end}}

@@ -1,0 +1,25 @@
+id: soc2
+title: SOC 2 (Trust Services Criteria)
+version: "2017"
+# SOC 2 is an organisational audit; Gatehouse produces per-change technical
+# evidence for the code-level criteria only. Everything else is manual.
+controls:
+  - id: CC7.1
+    title: Detect vulnerabilities (vulnerability scanning performed)
+    automatable: "yes"
+    evidence: activity
+    checks: [osv-scanner, grype, opengrep, gosec]
+  - id: CC7.1-NOVULN
+    title: No known-vulnerable components present
+    automatable: "yes"
+    families: [vulnerability]
+  - id: CC8.1
+    title: Change management (security gate runs on each change)
+    automatable: partial
+    evidence: activity
+    signals: [tests, sbom]
+  - id: CC6.1
+    title: Logical access / no hard-coded credentials
+    automatable: "yes"
+    families: [secret]
+    cwes: [CWE-798]

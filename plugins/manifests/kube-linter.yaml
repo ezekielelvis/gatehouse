@@ -1,0 +1,17 @@
+id: kube-linter
+version: "0.x"
+# kube-linter checks Kubernetes manifests and Helm charts for security and
+# best-practice issues (plan §6 family 9). Emits SARIF.
+image: ghcr.io/gatehouse/tools-iac@sha256:0000000000000000000000000000000000000000000000000000000000000000
+family: iac
+category: [iac]
+applies_when:
+  manifests: [helm]
+  languages: [YAML]
+network: none
+command: ["sh", "-c", "kube-linter lint /src --format sarif > /out/kube-linter.sarif || true"]
+host_command: ["sh", "-c", "kube-linter lint /src --format sarif > /out/kube-linter.sarif || true"]
+outputs:
+  - path: /out/kube-linter.sarif
+    format: sarif
+timeout: 5m

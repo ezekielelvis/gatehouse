@@ -1,0 +1,9 @@
+{{define "settings"}}{{template "head" .}}
+<h1>Settings</h1>
+<p class="muted">Read-only in this build; change these via CLI flags and
+<code>gatehouse.yaml</code>.</p>
+<table>
+  <tr><th>Setting</th><th>Value</th></tr>
+  {{range .Settings}}<tr><td>{{.K}}</td><td><code>{{.V}}</code></td></tr>{{end}}
+</table>
+{{template "foot" .}}{{end}}

@@ -1,0 +1,31 @@
+id: cwe-top25
+title: CWE Top 25 Most Dangerous Software Weaknesses
+version: "2023"
+# Direct CWE match: each control is one weakness, satisfied when no open finding
+# carries that CWE.
+controls:
+  - { id: "1",  title: "CWE-787 Out-of-bounds Write",                 automatable: "yes", cwes: [CWE-787] }
+  - { id: "2",  title: "CWE-79 Cross-site Scripting",                 automatable: "yes", cwes: [CWE-79] }
+  - { id: "3",  title: "CWE-89 SQL Injection",                        automatable: "yes", cwes: [CWE-89] }
+  - { id: "4",  title: "CWE-416 Use After Free",                      automatable: "yes", cwes: [CWE-416] }
+  - { id: "5",  title: "CWE-78 OS Command Injection",                 automatable: "yes", cwes: [CWE-78] }
+  - { id: "6",  title: "CWE-20 Improper Input Validation",            automatable: partial, cwes: [CWE-20] }
+  - { id: "7",  title: "CWE-125 Out-of-bounds Read",                  automatable: "yes", cwes: [CWE-125] }
+  - { id: "8",  title: "CWE-22 Path Traversal",                       automatable: "yes", cwes: [CWE-22] }
+  - { id: "9",  title: "CWE-352 Cross-Site Request Forgery",          automatable: partial, cwes: [CWE-352] }
+  - { id: "10", title: "CWE-434 Unrestricted Upload of Dangerous File", automatable: partial, cwes: [CWE-434] }
+  - { id: "11", title: "CWE-862 Missing Authorization",              automatable: partial, cwes: [CWE-862] }
+  - { id: "12", title: "CWE-476 NULL Pointer Dereference",           automatable: "yes", cwes: [CWE-476] }
+  - { id: "13", title: "CWE-287 Improper Authentication",            automatable: partial, cwes: [CWE-287] }
+  - { id: "14", title: "CWE-190 Integer Overflow or Wraparound",     automatable: "yes", cwes: [CWE-190] }
+  - { id: "15", title: "CWE-502 Deserialization of Untrusted Data",  automatable: "yes", cwes: [CWE-502] }
+  - { id: "16", title: "CWE-77 Command Injection",                   automatable: "yes", cwes: [CWE-77] }
+  - { id: "17", title: "CWE-119 Improper Restriction of Memory Operations", automatable: "yes", cwes: [CWE-119] }
+  - { id: "18", title: "CWE-798 Use of Hard-coded Credentials",      automatable: "yes", cwes: [CWE-798], families: [secret] }
+  - { id: "19", title: "CWE-918 Server-Side Request Forgery",        automatable: "yes", cwes: [CWE-918] }
+  - { id: "20", title: "CWE-306 Missing Authentication for Critical Function", automatable: partial, cwes: [CWE-306] }
+  - { id: "21", title: "CWE-362 Race Condition",                     automatable: partial, cwes: [CWE-362] }
+  - { id: "22", title: "CWE-269 Improper Privilege Management",      automatable: partial, cwes: [CWE-269] }
+  - { id: "23", title: "CWE-94 Code Injection",                      automatable: "yes", cwes: [CWE-94] }
+  - { id: "24", title: "CWE-863 Incorrect Authorization",           automatable: partial, cwes: [CWE-863] }
+  - { id: "25", title: "CWE-276 Incorrect Default Permissions",     automatable: partial, cwes: [CWE-276] }

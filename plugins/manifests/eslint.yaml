@@ -1,0 +1,17 @@
+id: eslint
+version: "9.x"
+# ESLint lints JS/TS (with security plugins when the repo configures them),
+# preferring the repo's own config (plan §5). Emits SARIF via @microsoft/eslint-formatter-sarif.
+image: ghcr.io/gatehouse/run-node@sha256:0000000000000000000000000000000000000000000000000000000000000000
+family: quality
+category: [lint]
+applies_when:
+  languages: [JavaScript, TypeScript]
+network: none
+command: ["sh", "-c", "eslint /src -f @microsoft/eslint-formatter-sarif -o /out/eslint.sarif || true"]
+host_command: ["sh", "-c", "eslint /src -f @microsoft/eslint-formatter-sarif -o /out/eslint.sarif || true"]
+outputs:
+  - path: /out/eslint.sarif
+    format: sarif
+timeout: 10m
+respects_repo_config: [.eslintrc, .eslintrc.json, eslint.config.js]

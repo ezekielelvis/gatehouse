@@ -1,0 +1,25 @@
+id: slsa
+title: SLSA (Build Track)
+version: "1.0"
+# SLSA is about build provenance. Gatehouse can locally evidence the
+# artifact-inventory and the signed-attestation pieces of the story; the
+# build-platform guarantees (hosted, hardened, isolated build) are properties
+# of the CI system and are marked manual — honestly, Gatehouse cannot attest
+# them from a local scan.
+controls:
+  - id: L1-PROVENANCE
+    title: Provenance exists (artifact inventory produced)
+    automatable: partial
+    evidence: activity
+    signals: [sbom]
+  - id: L2-SIGNED
+    title: Provenance is signed (Gatehouse Ed25519 attestation on the run)
+    automatable: partial
+    evidence: activity
+    signals: [sbom]
+  - id: L3-HARDENED-BUILD
+    title: Build runs on a hardened, isolated platform
+    automatable: "no"
+  - id: L3-NON-FALSIFIABLE
+    title: Provenance is non-falsifiable (keys controlled by the build platform)
+    automatable: "no"

@@ -1,0 +1,31 @@
+id: pci-dss
+title: PCI DSS
+version: "4.0.1"
+# Code-level requirements from Requirement 6 (develop and maintain secure
+# systems and software). Network, cardholder-data and process requirements are
+# out of scope for a local code scan and are omitted.
+controls:
+  - id: "6.2.4"
+    title: Secure coding practices address common software attacks (SAST)
+    automatable: partial
+    evidence: activity
+    checks: [opengrep, gosec, bandit]
+  - id: "6.3.1"
+    title: Security vulnerabilities are identified and managed
+    automatable: "yes"
+    evidence: activity
+    checks: [osv-scanner, grype]
+  - id: "6.3.2"
+    title: Inventory of bespoke and third-party software (SBOM)
+    automatable: partial
+    evidence: activity
+    signals: [sbom]
+  - id: "6.3.3-NOVULN"
+    title: No known critical/high vulnerabilities in components
+    automatable: "yes"
+    families: [vulnerability]
+  - id: "6.2.4-SECRETS"
+    title: No hard-coded credentials or keys in source
+    automatable: "yes"
+    families: [secret]
+    cwes: [CWE-798]

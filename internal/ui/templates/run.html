@@ -1,0 +1,69 @@
+{{define "run"}}{{template "head" .}}
+<p><a href="/">← all runs</a></p>
+<h1>Run <code>{{.Run.ID}}</code></h1>
+
+<div class="banner {{.Run.Verdict}}">
+  <span class="verdict {{.Run.Verdict}}">{{.Run.Verdict}}</span>
+  &nbsp;{{.Run.RepoPath}} · {{.Run.Context}} · {{.Run.Ref}}
+  {{if .Deny}}<ul class="msgs">{{range .Deny}}<li>✗ {{.}}</li>{{end}}</ul>{{end}}
+  {{if .Warn}}<ul class="msgs">{{range .Warn}}<li>⚠ {{.}}</li>{{end}}</ul>{{end}}
+</div>
+
+<div class="grid">
+  <div class="card stat"><div class="n">{{.NewCount}}</div><div class="muted">new findings</div></div>
+  <div class="card stat"><div class="n">{{len .Run.Findings}}</div><div class="muted">total findings</div></div>
+  <div class="card stat"><div class="n">{{.TestsPassed}}/{{len .Run.Tests}}</div><div class="muted">tests passed</div></div>
+  <div class="card stat"><div class="n">{{.CoverageChanged}}</div><div class="muted">changed-lines cov</div></div>
+</div>
+
+<h2>Findings</h2>
+<div class="filters">
+  <select name="family" hx-get="/runs/{{.Run.ID}}/findings" hx-target="#findings" hx-include="[name='severity'],[name='status']">
+    <option value="">all families</option>
+    {{range .Families}}<option value="{{.}}">{{.}}</option>{{end}}
+  </select>
+  <select name="severity" hx-get="/runs/{{.Run.ID}}/findings" hx-target="#findings" hx-include="[name='family'],[name='status']">
+    <option value="">all severities</option>
+    <option value="critical">critical</option><option value="high">high</option>
+    <option value="medium">medium</option><option value="low">low</option>
+  </select>
+  <select name="status" hx-get="/runs/{{.Run.ID}}/findings" hx-target="#findings" hx-include="[name='family'],[name='severity']">
+    <option value="">all statuses</option>
+    <option value="new">new</option><option value="existing">existing</option>
+  </select>
+</div>
+<table>
+  <thead><tr><th>Status</th><th>Severity</th><th>Rule</th><th>Location</th><th>Message</th></tr></thead>
+  <tbody id="findings">{{template "findings_rows" .}}</tbody>
+</table>
+
+{{if .Run.Tests}}
+<h2>Tests</h2>
+<table>
+  <tr><th>Suite</th><th>Name</th><th>Status</th><th>Flaky</th><th>Duration</th></tr>
+  {{range .Run.Tests}}<tr>
+    <td>{{.Suite}}</td><td><code>{{.Name}}</code></td>
+    <td>{{.Status}}{{if .Quarantined}} <span class="muted">(quarantined)</span>{{end}}</td>
+    <td>{{if .Flaky}}<span class="sev-medium">flaky</span>{{else}}<span class="muted">—</span>{{end}}</td>
+    <td class="muted">{{.Duration}}</td>
+  </tr>{{end}}
+</table>
+{{end}}
+
+{{if .Run.SBOM}}
+<h2>SBOM &amp; licences ({{len .Run.SBOM}} components)</h2>
+<table>
+  <tr><th>Component</th><th>Version</th><th>Licence</th><th>Scope</th></tr>
+  {{range .Run.SBOM}}<tr><td>{{.Name}}</td><td><code>{{.Version}}</code></td><td>{{.License}}</td><td class="muted">{{if .Direct}}direct{{else}}transitive{{end}}</td></tr>{{end}}
+</table>
+{{end}}
+
+<h2>Compliance</h2>
+<div class="filters">
+  <select name="standard" hx-get="/runs/{{.Run.ID}}/compliance" hx-target="#compliance">
+    {{range .Standards}}<option value="{{.}}">{{.}}</option>{{end}}
+  </select>
+</div>
+<div id="compliance">{{template "compliance_table" .}}</div>
+
+{{template "foot" .}}{{end}}

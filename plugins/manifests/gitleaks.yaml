@@ -1,0 +1,19 @@
+id: gitleaks
+version: "8.x"
+# Image pinned by digest in production (plan §14). Placeholder digest here; the
+# tool lockfile resolves the real one.
+image: ghcr.io/gatehouse/gitleaks@sha256:0000000000000000000000000000000000000000000000000000000000000000
+family: secret
+category: [secret]
+applies_when:
+  always: true          # secrets scanning is language-agnostic
+network: none
+# Scan the whole snapshot dir (no-git: we've already snapshotted the working
+# tree) and emit SARIF to /out.
+command: ["gitleaks", "dir", "/src", "--report-format=sarif", "--report-path=/out/gitleaks.sarif", "--exit-code=0", "--no-banner"]
+# Dev-only fallback used by the host runtime when no container runtime exists.
+host_command: ["gitleaks", "dir", "/src", "--report-format=sarif", "--report-path=/out/gitleaks.sarif", "--exit-code=0", "--no-banner"]
+outputs:
+  - path: /out/gitleaks.sarif
+    format: sarif
+timeout: 5m

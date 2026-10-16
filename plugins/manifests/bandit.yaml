@@ -1,0 +1,16 @@
+id: bandit
+version: "1.x"
+# Bandit is Python-specific SAST (plan §6 family 2): common Python security
+# issues. Emits SARIF via its sarif formatter.
+image: ghcr.io/gatehouse/run-python@sha256:0000000000000000000000000000000000000000000000000000000000000000
+family: sast
+category: [sast]
+applies_when:
+  languages: [Python]
+network: none
+command: ["sh", "-c", "bandit -r /src -f sarif -o /out/bandit.sarif || true"]
+host_command: ["sh", "-c", "bandit -r /src -f sarif -o /out/bandit.sarif || true"]
+outputs:
+  - path: /out/bandit.sarif
+    format: sarif
+timeout: 5m

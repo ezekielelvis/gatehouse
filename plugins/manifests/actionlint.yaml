@@ -1,0 +1,16 @@
+id: actionlint
+version: "1.x"
+# actionlint checks GitHub Actions workflows for errors and security issues
+# (plan §6 family 11). It emits SARIF via its template; we wrap it in a script.
+image: ghcr.io/gatehouse/tools-core@sha256:0000000000000000000000000000000000000000000000000000000000000000
+family: cicd
+category: [cicd]
+applies_when:
+  manifests: [github-actions]
+network: none
+command: ["sh", "-c", "actionlint -format '{{json .}}' > /out/actionlint.json || true"]
+host_command: ["sh", "-c", "actionlint -format '{{json .}}' > /out/actionlint.json || true"]
+outputs:
+  - path: /out/actionlint.json
+    format: json
+timeout: 2m

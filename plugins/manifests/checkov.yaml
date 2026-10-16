@@ -1,0 +1,17 @@
+id: checkov
+version: "3.x"
+# Checkov scans IaC (Terraform, CloudFormation, Kubernetes, Helm, Dockerfile,
+# Ansible) for misconfigurations (plan §6 family 9). Emits SARIF.
+image: ghcr.io/gatehouse/tools-iac@sha256:0000000000000000000000000000000000000000000000000000000000000000
+family: iac
+category: [iac]
+applies_when:
+  manifests: [terraform, helm]
+  languages: [Terraform, YAML]
+network: none
+command: ["checkov", "-d", "/src", "-o", "sarif", "--output-file-path", "/out", "--compact", "--quiet"]
+host_command: ["checkov", "-d", "/src", "-o", "sarif", "--output-file-path", "/out", "--compact", "--quiet"]
+outputs:
+  - path: /out/results_sarif.sarif
+    format: sarif
+timeout: 10m

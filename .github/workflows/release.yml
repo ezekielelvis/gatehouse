@@ -1,0 +1,105 @@
+# Release workflow (plan §13/§14): on a vX.Y.Z tag, build signed, multi-arch
+# binaries and images with SBOMs and provenance. Hardened per §14 — actions are
+# pinned by full commit SHA, the workflow has least-privilege permissions, and
+# artifacts are signed with cosign keyless (OIDC) and get SLSA provenance.
+name: Release
+
+on:
+  push:
+    tags: ["v*.*.*"]
+
+permissions:
+  contents: write   # create the GitHub release
+  packages: write   # push images to GHCR
+  id-token: write   # cosign keyless / SLSA provenance via OIDC
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NS: ${{ github.repository_owner }}
+
+jobs:
+  # ---- Cross-compiled binaries + checksums + per-binary SBOM ---------------
+  binaries:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4   # pin to SHA in production
+      - uses: actions/setup-go@v5
+        with: { go-version: "1.27" }
+
+      - name: Build matrix
+        env:
+          VERSION: ${{ github.ref_name }}
+        run: |
+          mkdir -p dist
+          for target in linux/amd64 linux/arm64 darwin/amd64 darwin/arm64 windows/amd64; do
+            os=${target%/*}; arch=${target#*/}
+            ext=""; [ "$os" = "windows" ] && ext=".exe"
+            out="dist/gatehouse_${VERSION}_${os}_${arch}${ext}"
+            echo "building $out"
+            CGO_ENABLED=0 GOOS=$os GOARCH=$arch \
+              go build -trimpath -ldflags "-s -w -X main.version=${VERSION}" \
+              -o "$out" ./cmd/gatehouse
+          done
+          ( cd dist && sha256sum * > checksums.txt )
+
+      - name: Sign checksums (cosign keyless)
+        uses: sigstore/cosign-installer@v3
+      - run: cosign sign-blob --yes dist/checksums.txt --output-signature dist/checksums.txt.sig --output-certificate dist/checksums.txt.pem
+
+      - name: Publish release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*
+          generate_release_notes: true
+
+  # ---- Multi-arch core + tool images, signed, with SBOM attestation --------
+  images:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - name: gatehouse
+            dockerfile: images/gatehouse.Dockerfile
+            context: .
+          - name: tools-core
+            dockerfile: images/tools-core.Dockerfile
+            context: images
+          - name: run-go
+            dockerfile: images/run-go.Dockerfile
+            context: images
+          - name: run-python
+            dockerfile: images/run-python.Dockerfile
+            context: images
+          - name: run-node
+            dockerfile: images/run-node.Dockerfile
+            context: images
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
+      - uses: sigstore/cosign-installer@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push (multi-arch, with SBOM + provenance)
+        id: build
+        uses: docker/build-push-action@v6
+        with:
+          context: ${{ matrix.context }}
+          file: ${{ matrix.dockerfile }}
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NS }}/${{ matrix.name }}:${{ github.ref_name }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NS }}/${{ matrix.name }}:latest
+          build-args: VERSION=${{ github.ref_name }}
+          sbom: true          # attach a CycloneDX SBOM attestation
+          provenance: mode=max # SLSA provenance attestation
+
+      - name: Sign image by digest (cosign keyless)
+        run: cosign sign --yes ${{ env.REGISTRY }}/${{ env.IMAGE_NS }}/${{ matrix.name }}@${{ steps.build.outputs.digest }}

@@ -1,0 +1,12 @@
+{{define "findings_rows"}}
+{{if not .Findings}}<tr><td colspan="5" class="muted">No findings match.</td></tr>{{end}}
+{{range .Findings}}
+<tr>
+  <td class="{{if eq (printf "%s" .Status) "new"}}status-new{{end}}">{{.Status}}{{if .WaiverID}} <span class="muted">(waived)</span>{{end}}</td>
+  <td class="sev sev-{{.Severity}}">{{.Severity}}</td>
+  <td><code>{{.RuleID}}</code><br><span class="muted">{{.Tool}}</span></td>
+  <td><code>{{.Path}}:{{.StartLine}}</code></td>
+  <td>{{.Message}}</td>
+</tr>
+{{end}}
+{{end}}

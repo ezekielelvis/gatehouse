@@ -1,0 +1,16 @@
+id: zizmor
+version: "0.x"
+# zizmor audits GitHub Actions for security issues — script injection, unpinned
+# actions, over-broad tokens, dangerous triggers (plan §6 family 11). Emits SARIF.
+image: ghcr.io/gatehouse/tools-core@sha256:0000000000000000000000000000000000000000000000000000000000000000
+family: cicd
+category: [cicd]
+applies_when:
+  manifests: [github-actions]
+network: none
+command: ["sh", "-c", "zizmor --format sarif /src/.github/workflows > /out/zizmor.sarif"]
+host_command: ["sh", "-c", "zizmor --format sarif /src/.github/workflows > /out/zizmor.sarif"]
+outputs:
+  - path: /out/zizmor.sarif
+    format: sarif
+timeout: 5m

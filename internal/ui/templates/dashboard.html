@@ -1,0 +1,19 @@
+{{define "dashboard"}}{{template "head" .}}
+<h1>Recent runs</h1>
+{{if not .Runs}}
+  <p class="muted">No runs yet. Run <code>gatehouse scan .</code> to get started.</p>
+{{else}}
+<table>
+  <tr><th>Run</th><th>Repo</th><th>Context</th><th>Verdict</th><th>Started</th></tr>
+  {{range .Runs}}
+  <tr>
+    <td><a href="/runs/{{.ID}}"><code>{{.ID}}</code></a></td>
+    <td>{{.RepoShort}}</td>
+    <td>{{.Context}}</td>
+    <td><span class="verdict {{.Verdict}}">{{.Verdict}}</span></td>
+    <td class="muted">{{.Started}}</td>
+  </tr>
+  {{end}}
+</table>
+{{end}}
+{{template "foot" .}}{{end}}

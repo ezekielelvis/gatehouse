@@ -1,0 +1,17 @@
+id: trivy-config
+version: "0.x"
+# Trivy in config mode: IaC and container-config misconfigurations (plan §6
+# family 9). Second IaC tool so the family has redundancy if one changes licence.
+image: ghcr.io/gatehouse/tools-iac@sha256:0000000000000000000000000000000000000000000000000000000000000000
+family: iac
+category: [iac]
+applies_when:
+  manifests: [terraform, helm, Dockerfile]
+  languages: [Terraform, YAML]
+network: none
+command: ["trivy", "config", "/src", "--format", "sarif", "--output", "/out/trivy-config.sarif", "--quiet"]
+host_command: ["trivy", "config", "/src", "--format", "sarif", "--output", "/out/trivy-config.sarif", "--quiet"]
+outputs:
+  - path: /out/trivy-config.sarif
+    format: sarif
+timeout: 10m

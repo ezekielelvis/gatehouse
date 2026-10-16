@@ -1,0 +1,21 @@
+{{define "waivers"}}{{template "head" .}}
+<h1>Waivers in effect</h1>
+<p class="muted">Findings suppressed by a waiver across recent runs. Waivers are
+declared in each repo's <code>.gatehouse/waivers.yaml</code> and reviewed like code.</p>
+{{if not .Findings}}
+  <p class="muted">No active waivers.</p>
+{{else}}
+<table>
+  <tr><th>Waiver</th><th>Severity</th><th>Rule</th><th>Location</th><th>Message</th></tr>
+  {{range .Findings}}
+  <tr>
+    <td><code>{{.WaiverID}}</code></td>
+    <td class="sev sev-{{.Severity}}">{{.Severity}}</td>
+    <td><code>{{.RuleID}}</code></td>
+    <td><code>{{.Path}}:{{.StartLine}}</code></td>
+    <td>{{.Message}}</td>
+  </tr>
+  {{end}}
+</table>
+{{end}}
+{{template "foot" .}}{{end}}

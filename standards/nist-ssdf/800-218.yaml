@@ -1,0 +1,39 @@
+id: nist-ssdf
+title: NIST SSDF (SP 800-218)
+version: "1.1"
+# SSDF practices are process controls: evidence that an activity was performed,
+# not the absence of a specific weakness. These use evidence: activity, so a
+# practice is "met" when the relevant analysis actually ran in the scan. Only
+# the practices Gatehouse can observe locally are listed; the rest need human
+# attestation and are deliberately omitted rather than claimed.
+controls:
+  - id: PW.4
+    title: Reuse existing, well-secured software (SCA of third-party components)
+    automatable: "yes"
+    evidence: activity
+    checks: [osv-scanner, grype, syft]
+  - id: PW.7
+    title: Review and/or analyze human-readable code (static analysis)
+    automatable: "yes"
+    evidence: activity
+    checks: [opengrep, gosec, bandit]
+  - id: PW.8
+    title: Test executable code to identify vulnerabilities (automated testing)
+    automatable: partial
+    evidence: activity
+    signals: [tests]
+  - id: PS.3
+    title: Preserve provenance for each software component (SBOM)
+    automatable: partial
+    evidence: activity
+    signals: [sbom]
+  - id: RV.1
+    title: Identify and confirm vulnerabilities on a continuous basis
+    automatable: "yes"
+    evidence: activity
+    checks: [osv-scanner, grype]
+  - id: PO.4
+    title: Define and use criteria for software security checks (policy gate)
+    automatable: partial
+    evidence: activity
+    signals: [sbom, tests]

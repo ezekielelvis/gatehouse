@@ -1,0 +1,22 @@
+# Docker Compose deployment for Gatehouse (plan §13).
+#
+# Prefer the rootless Docker/Podman socket over the rootful one: on rootful
+# Docker the mounted socket is host-root-equivalent. For rootless Podman use
+#   $XDG_RUNTIME_DIR/podman/podman.sock
+# instead of /var/run/docker.sock below.
+services:
+  gatehouse:
+    # Pin by digest in production; tag shown for readability.
+    image: ghcr.io/gatehouse/gatehouse:latest
+    command: ["serve", "--addr", "0.0.0.0:7420"]
+    ports:
+      - "127.0.0.1:7420:7420" # localhost only
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock # prefer the rootless socket
+      - ${HOME}/code:/repos:ro # folders you allow it to scan
+      - gatehouse-data:/data
+    environment:
+      - GATEHOUSE_DB=/data/gatehouse.db
+
+volumes:
+  gatehouse-data: {}

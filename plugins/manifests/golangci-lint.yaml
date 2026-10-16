@@ -1,0 +1,17 @@
+id: golangci-lint
+version: "1.x"
+# golangci-lint aggregates many Go linters, preferring the repo's .golangci.yml
+# (plan §5). Emits SARIF.
+image: ghcr.io/gatehouse/run-go@sha256:0000000000000000000000000000000000000000000000000000000000000000
+family: quality
+category: [lint]
+applies_when:
+  languages: [Go]
+network: none
+command: ["sh", "-c", "golangci-lint run /src/... --out-format sarif > /out/golangci.sarif || true"]
+host_command: ["sh", "-c", "cd /src && golangci-lint run ./... --out-format sarif > /out/golangci.sarif || true"]
+outputs:
+  - path: /out/golangci.sarif
+    format: sarif
+timeout: 10m
+respects_repo_config: [.golangci.yml, .golangci.yaml]

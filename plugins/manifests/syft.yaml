@@ -1,0 +1,17 @@
+id: syft
+version: "1.x"
+# Syft generates a full component inventory as a CycloneDX 1.6 SBOM (plan §6
+# family 7). The SBOM drives licence compliance and standards evidence; it
+# carries no findings itself, so it has no family severity.
+image: ghcr.io/gatehouse/tools-core@sha256:0000000000000000000000000000000000000000000000000000000000000000
+family: license
+category: [sbom]
+applies_when:
+  manifests: [go.mod, package.json, requirements.txt, pyproject.toml, Cargo.toml, pom.xml, composer.json, Gemfile]
+network: none
+command: ["syft", "scan", "dir:/src", "-o", "cyclonedx-json=/out/sbom.cdx.json", "-q"]
+host_command: ["syft", "scan", "dir:/src", "-o", "cyclonedx-json=/out/sbom.cdx.json", "-q"]
+outputs:
+  - path: /out/sbom.cdx.json
+    format: cyclonedx
+timeout: 5m

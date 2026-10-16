@@ -1,0 +1,14 @@
+{{define "compliance_table"}}
+<table>
+  <tr><th>Control</th><th>Status</th><th>Title</th><th>Evidence</th></tr>
+  {{range .Compliance.Rows}}
+  <tr>
+    <td><code>{{.ID}}</code></td>
+    <td class="{{.Class}}">{{.Label}}</td>
+    <td>{{.Title}}</td>
+    <td class="muted">{{.Detail}}</td>
+  </tr>
+  {{end}}
+</table>
+<p class="muted">{{.Compliance.Summary}} — 'manual' controls require human attestation; Gatehouse does not auto-pass them.</p>
+{{end}}

@@ -1,0 +1,25 @@
+id: iso-27001
+title: ISO/IEC 27001:2022 Annex A
+version: "2022"
+# Only the code-level Annex A controls Gatehouse can evidence are listed. The
+# management-system controls (policies, roles, audits) are out of scope and are
+# deliberately omitted rather than claimed as covered.
+controls:
+  - id: A.8.25
+    title: Secure development life cycle
+    automatable: "no"
+  - id: A.8.28
+    title: Secure coding (static analysis performed)
+    automatable: partial
+    evidence: activity
+    checks: [opengrep, gosec, bandit]
+  - id: A.8.29
+    title: Security testing in development and acceptance
+    automatable: partial
+    evidence: activity
+    checks: [opengrep, osv-scanner]
+    signals: [tests]
+  - id: A.8.8
+    title: Management of technical vulnerabilities (no known-vulnerable deps)
+    automatable: "yes"
+    families: [vulnerability]

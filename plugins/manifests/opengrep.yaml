@@ -1,0 +1,18 @@
+id: opengrep
+version: "1.x"
+# Opengrep is the LGPL community fork of Semgrep CE; it speaks Semgrep rules and
+# emits SARIF (plan §6, family 1). Pinned by digest in production.
+image: ghcr.io/gatehouse/tools-core@sha256:0000000000000000000000000000000000000000000000000000000000000000
+family: sast
+category: [sast]
+applies_when:
+  languages: [Go, Python, JavaScript, TypeScript, Java, Ruby, PHP, C, "C++", "C#"]
+network: none
+# Use the bundled auto config ruleset; scan /src, write SARIF to /out.
+command: ["opengrep", "scan", "--config=auto", "--sarif", "--output=/out/opengrep.sarif", "/src"]
+host_command: ["opengrep", "scan", "--config=auto", "--sarif", "--output=/out/opengrep.sarif", "/src"]
+outputs:
+  - path: /out/opengrep.sarif
+    format: sarif
+timeout: 10m
+respects_repo_config: [.semgrep.yml, .opengrep.yml]
