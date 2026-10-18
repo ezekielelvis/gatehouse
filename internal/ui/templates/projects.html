@@ -1,0 +1,42 @@
+{{define "projects"}}{{template "head" .}}
+<div class="page-head"><div><h1>Projects</h1><div class="sub">Register a local repository, then run a scan without leaving the browser.</div></div></div>
+
+<div class="panel">
+  {{template "panelHead" "Add a project"}}
+  <form method="post" action="/projects" class="filters" style="align-items:center">
+    <input class="input" name="path" placeholder="/absolute/path/to/repo" style="width:min(30rem,100%);border-radius:var(--r-sm)" required>
+    <input class="input" name="name" placeholder="name (optional)" style="border-radius:var(--r-sm)">
+    <button class="icon-btn" type="submit">Add project</button>
+  </form>
+</div>
+
+<div class="panel">
+  {{template "panelHead" "Registered projects"}}
+  {{if not .Repos}}{{template "emptyState" "No projects yet — add one above."}}{{else}}
+  <div class="table-wrap">
+  <table class="table">
+    <thead><tr><th>Project</th><th>Path</th><th>Last verdict</th><th>Run</th></tr></thead>
+    <tbody>
+    {{range .Repos}}<tr>
+      <td class="primary">{{.Name}}</td>
+      <td class="mono muted">{{.Path}}</td>
+      <td>{{if .LastRun}}<a class="plain" href="/runs/{{.LastRun}}">{{template "verdict" .LastVerdict}}</a>{{else}}<span class="muted">—</span>{{end}}</td>
+      <td>
+        {{if $.CanRun}}
+        <form method="post" action="/projects/{{.ID}}/scan" style="display:flex;gap:6px;align-items:center">
+          <select class="input" name="profile">
+            <option value="pre-push">pre-push</option>
+            <option value="pre-commit">pre-commit</option>
+            <option value="release">release</option>
+          </select>
+          <button class="icon-btn" type="submit">▶ Run scan</button>
+        </form>
+        {{else}}<span class="muted" title="start the server with a container runtime to enable scanning">scanning off</span>{{end}}
+      </td>
+    </tr>{{end}}
+    </tbody>
+  </table>
+  </div>
+  {{end}}
+</div>
+{{template "foot" .}}{{end}}

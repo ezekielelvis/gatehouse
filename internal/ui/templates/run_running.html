@@ -1,0 +1,14 @@
+{{define "run_running"}}{{template "head" .}}
+<div class="crumbs"><a href="/projects">Projects</a> › <span>Scanning</span></div>
+<div class="page-head">
+  <div><h1 class="mono">{{.ID}}</h1><div class="sub">{{.Repo}}</div></div>
+  <span class="verdict warn">running</span>
+</div>
+<div class="panel">
+  <div class="panel-head"><h2>Live progress</h2><span class="label">auto-refreshing</span></div>
+  <pre class="code" id="live" hx-get="/runs/{{.ID}}/live" hx-trigger="load, every 1500ms" hx-swap="innerHTML">starting…</pre>
+</div>
+{{template "foot" .}}{{end}}
+
+{{define "progress_lines"}}{{range .Lines}}{{.}}
+{{end}}{{end}}

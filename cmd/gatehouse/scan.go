@@ -32,6 +32,7 @@ func cmdScan(args []string) int {
 	jsonOut := fs.Bool("json", false, "emit the run as JSON")
 	hostExec := fs.Bool("unsafe-host-exec", false, "DEV ONLY: run tools on the host with no sandbox when no container runtime is available")
 	pluginsDir := fs.String("plugins", "", "additional plugin manifest directory (appended to the built-in set)")
+	noBuiltin := fs.Bool("no-builtin-plugins", false, "use only --plugins manifests, skipping the built-in set")
 
 	// Allow the repo path to appear before the flags (the natural
 	// "gatehouse scan <path> --flags" form); the stdlib flag package otherwise
@@ -76,10 +77,13 @@ func cmdScan(args []string) int {
 	}
 
 	// Load plugins and the policy packs the repo selected.
-	plugs, err := pluginpacks.Builtin()
-	if err != nil {
-		fmt.Fprintln(os.Stderr, "load plugins:", err)
-		return exitError
+	var plugs []plugins.Manifest
+	if !*noBuiltin {
+		plugs, err = pluginpacks.Builtin()
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "load plugins:", err)
+			return exitError
+		}
 	}
 	if *pluginsDir != "" {
 		extra, err := plugins.LoadDir(os.DirFS(*pluginsDir), ".")

@@ -21,6 +21,7 @@ controls:
   - id: A04
     title: Insecure Design
     automatable: "no"
+    guidance: "Threat-model the feature and record design decisions (trust boundaries, abuse cases). No scanner can verify intent — attach a design review."
   - id: A05
     title: Security Misconfiguration
     automatable: partial
@@ -42,6 +43,7 @@ controls:
     title: Security Logging and Monitoring Failures
     automatable: "no"
     cwes: [CWE-117, CWE-778]
+    guidance: "Confirm security events (auth, access-control, server errors) are logged with enough context and shipped to monitoring. Verify by reviewing logging config and a sample log, not by scanning source."
   - id: A10
     title: Server-Side Request Forgery (SSRF)
     automatable: partial

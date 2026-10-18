@@ -52,6 +52,9 @@ type Options struct {
 	Config config.Config
 	// Waivers suppress matched findings. nil is fine (no waivers).
 	Waivers *waivers.Set
+	// RunID, if set, is used as the run's id instead of a generated one, so a
+	// caller (e.g. the UI) can pre-create a "running" row and then poll it.
+	RunID string
 }
 
 // Orchestrator wires together the runtime, plugin set, policy engine and store.
@@ -89,8 +92,12 @@ func (o *Orchestrator) Run(ctx context.Context, opts Options) (model.Run, policy
 	if opts.Context == "" {
 		opts.Context = model.ContextPrePush
 	}
+	id := opts.RunID
+	if id == "" {
+		id = newRunID()
+	}
 	run := model.Run{
-		ID:        newRunID(),
+		ID:        id,
 		RepoPath:  opts.RepoPath,
 		Ref:       opts.Ref,
 		BaseRef:   opts.BaseRef,
@@ -372,8 +379,51 @@ func (o *Orchestrator) collect(srcDir, outDir string, m plugins.Manifest, change
 	for i := range res.findings {
 		res.findings[i].Path = relPath(srcDir, res.findings[i].Path)
 		res.findings[i].Severity = defaultSeverity(m.Family, res.findings[i].Severity)
+		// Capture a few lines of source context around the finding so the UI can
+		// show the offending code (SonarQube-style), even for tools that emit no
+		// snippet. The snapshot is deleted after the run, so we must read it now.
+		if snip := codeContext(srcDir, res.findings[i].Path, res.findings[i].StartLine, res.findings[i].EndLine); snip != "" {
+			res.findings[i].Snippet = snip
+		}
 	}
 	return res, nil
+}
+
+// contextRadius is how many lines above and below the finding we capture.
+const contextRadius = 3
+
+// codeContext returns the source lines around [start,end] of a repo-relative
+// file, each prefixed with its line number and a marker ('>' on the finding
+// lines). Returns "" when the file or lines can't be read.
+func codeContext(srcDir, relPath string, start, end int) string {
+	if relPath == "" || start < 1 {
+		return ""
+	}
+	if end < start {
+		end = start
+	}
+	data, err := os.ReadFile(filepath.Join(srcDir, filepath.FromSlash(relPath)))
+	if err != nil {
+		return ""
+	}
+	lines := strings.Split(string(data), "\n")
+	from := start - contextRadius
+	if from < 1 {
+		from = 1
+	}
+	to := end + contextRadius
+	if to > len(lines) {
+		to = len(lines)
+	}
+	var b strings.Builder
+	for ln := from; ln <= to; ln++ {
+		marker := "  "
+		if ln >= start && ln <= end {
+			marker = "> "
+		}
+		fmt.Fprintf(&b, "%s%4d | %s\n", marker, ln, lines[ln-1])
+	}
+	return strings.TrimRight(b.String(), "\n")
 }
 
 // relPath makes a scanner-reported path repo-relative. Container runtimes

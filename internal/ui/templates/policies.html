@@ -1,15 +1,19 @@
 {{define "policies"}}{{template "head" .}}
-<h1>Policies</h1>
-<h2>Built-in packs</h2>
-<p class="muted">Select packs per repo in <code>gatehouse.yaml</code>
-(<code>policy_packs: [baseline, …]</code>). Layers stack: later packs tighten earlier ones.</p>
-<table>
-  <tr><th>Pack</th><th>Role</th></tr>
-  {{range .Packs}}<tr><td><code>{{.Name}}</code></td><td>{{.Role}}</td></tr>{{end}}
-</table>
-<h2>Repo policy layer</h2>
-<p class="muted">A repository can add its own rules in
-<code>.gatehouse/policies/</code> — <code>*.rego</code> (full Rego) or
-<code>*.yaml</code> (the simple rule DSL, compiled to Rego). These travel with
-the code and go through normal review.</p>
+<div class="page-head"><div><h1>Policies</h1><div class="sub">Gates are declarative, versioned and layered — later packs tighten earlier ones.</div></div></div>
+<div class="panel">
+  {{template "panelHead" "Built-in packs"}}
+  <p class="panel-caption">Select per repo in <code>gatehouse.yaml</code>: <code>policy_packs: [baseline, …]</code>.</p>
+  <div class="table-wrap">
+  <table class="table">
+    <thead><tr><th>Pack</th><th>Role</th></tr></thead>
+    <tbody>
+    {{range .Packs}}<tr><td class="mono primary">{{.Name}}</td><td>{{.Role}}</td></tr>{{end}}
+    </tbody>
+  </table>
+  </div>
+</div>
+<div class="panel">
+  {{template "panelHead" "Repo policy layer"}}
+  <p class="panel-caption">A repository adds its own rules in <code>.gatehouse/policies/</code> — <code>*.rego</code> (full Rego) or <code>*.yaml</code> (the simple rule DSL, compiled to Rego). These travel with the code and go through normal review.</p>
+</div>
 {{template "foot" .}}{{end}}

@@ -46,6 +46,9 @@ type Control struct {
 	Checks      []string    `yaml:"checks"`   // specific rule/plugin IDs
 	Families    []string    `yaml:"families"` // finding families (e.g. vulnerability, secret)
 	Signals     []string    `yaml:"signals"`  // activity signals: tests, sbom
+	// Guidance explains, for a manual control, why Gatehouse can't attest it and
+	// what a human should check. Shown in the compliance view.
+	Guidance string `yaml:"guidance"`
 }
 
 // Standard is a parsed mapping file.

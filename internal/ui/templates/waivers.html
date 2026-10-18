@@ -1,21 +1,22 @@
 {{define "waivers"}}{{template "head" .}}
-<h1>Waivers in effect</h1>
-<p class="muted">Findings suppressed by a waiver across recent runs. Waivers are
-declared in each repo's <code>.gatehouse/waivers.yaml</code> and reviewed like code.</p>
-{{if not .Findings}}
-  <p class="muted">No active waivers.</p>
-{{else}}
-<table>
-  <tr><th>Waiver</th><th>Severity</th><th>Rule</th><th>Location</th><th>Message</th></tr>
-  {{range .Findings}}
-  <tr>
-    <td><code>{{.WaiverID}}</code></td>
-    <td class="sev sev-{{.Severity}}">{{.Severity}}</td>
-    <td><code>{{.RuleID}}</code></td>
-    <td><code>{{.Path}}:{{.StartLine}}</code></td>
-    <td>{{.Message}}</td>
-  </tr>
+<div class="page-head"><div><h1>Waivers in effect</h1><div class="sub">Findings suppressed across recent runs. Waivers live in each repo's <code>.gatehouse/waivers.yaml</code> and are reviewed like code.</div></div></div>
+<div class="panel">
+  {{template "panelHead" "Active waivers"}}
+  {{if not .Findings}}{{template "emptyState" "No active waivers."}}{{else}}
+  <div class="table-wrap">
+  <table class="table">
+    <thead><tr><th>Waiver</th><th>Severity</th><th>Rule</th><th>Location</th><th>Message</th></tr></thead>
+    <tbody>
+    {{range .Findings}}<tr>
+      <td class="mono primary">{{.WaiverID}}</td>
+      <td><span class="sev sev-{{.Severity}}">{{.Severity}}</span></td>
+      <td class="mono">{{.RuleID}}</td>
+      <td><code>{{.Path}}:{{.StartLine}}</code></td>
+      <td class="cell-msg">{{.Message}}</td>
+    </tr>{{end}}
+    </tbody>
+  </table>
+  </div>
   {{end}}
-</table>
-{{end}}
+</div>
 {{template "foot" .}}{{end}}

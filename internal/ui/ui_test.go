@@ -5,6 +5,7 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/gatehouse/gatehouse/internal/model"
 	"github.com/gatehouse/gatehouse/internal/store"
@@ -154,6 +155,64 @@ func TestSettingsPage(t *testing.T) {
 	}
 	if !strings.Contains(body, "KEY123") || !strings.Contains(body, "127.0.0.1:7420") {
 		t.Error("settings page should show injected metadata")
+	}
+}
+
+func post(t *testing.T, srv *Server, path, body string) (int, string) {
+	t.Helper()
+	mux := http.NewServeMux()
+	srv.Routes(mux)
+	rec := httptest.NewRecorder()
+	req := httptest.NewRequest("POST", path, strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	mux.ServeHTTP(rec, req)
+	return rec.Code, rec.Header().Get("Location")
+}
+
+func TestProjectsAddAndScanFlow(t *testing.T) {
+	srv, _ := seed(t)
+
+	// Add a project.
+	code, loc := post(t, srv, "/projects", "path=/tmp/myrepo&name=myrepo")
+	if code != http.StatusSeeOther || loc != "/projects" {
+		t.Fatalf("add project: code=%d loc=%s", code, loc)
+	}
+	c, body := do(t, srv, "/projects")
+	if c != 200 || !strings.Contains(body, "myrepo") {
+		t.Fatalf("projects page should list myrepo: %d", c)
+	}
+	// Without a runner, the run button is disabled.
+	if strings.Contains(body, "Run scan") {
+		t.Error("run button should be hidden until SetRunner is called")
+	}
+
+	// Enable a fake runner and trigger a scan.
+	ran := make(chan string, 1)
+	srv.SetRunner(func(runID, repoPath, ref, ctx string, progress func(string)) error {
+		progress("working…")
+		ran <- repoPath
+		return nil
+	})
+	code, loc = post(t, srv, "/projects/1/scan", "profile=pre-push") // repo id 1 (first added)
+	if code != http.StatusSeeOther || !strings.HasPrefix(loc, "/runs/") {
+		t.Fatalf("scan trigger: code=%d loc=%s", code, loc)
+	}
+	select {
+	case repo := <-ran:
+		if repo != "/tmp/myrepo" {
+			t.Errorf("runner got wrong repo: %s", repo)
+		}
+	case <-time.After(2 * time.Second):
+		t.Fatal("runner was not invoked")
+	}
+}
+
+func TestScanDisabledWithoutRunner(t *testing.T) {
+	srv, _ := seed(t)
+	post(t, srv, "/projects", "path=/tmp/r&name=r")
+	code, _ := post(t, srv, "/projects/1/scan", "profile=pre-push")
+	if code != http.StatusServiceUnavailable {
+		t.Fatalf("scan without runner should be 503, got %d", code)
 	}
 }
 

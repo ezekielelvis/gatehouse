@@ -1,22 +1,24 @@
 {{define "history"}}{{template "head" .}}
-<h1>History &amp; trends</h1>
-{{if not .Rows}}
-  <p class="muted">No runs yet.</p>
-{{else}}
-<p class="muted">Newest first. The bar shows new findings per run (longer = worse).</p>
-<table>
-  <tr><th>Run</th><th>Repo</th><th>Verdict</th><th>New</th><th>Trend</th><th>Changed-cov</th><th>Started</th></tr>
-  {{range .Rows}}
-  <tr>
-    <td><a href="/runs/{{.ID}}"><code>{{.ID}}</code></a></td>
-    <td>{{.Repo}}</td>
-    <td><span class="verdict {{.Verdict}}">{{.Verdict}}</span></td>
-    <td>{{.New}}</td>
-    <td><span style="display:inline-block;height:.7rem;background:#d1434b;width:{{.BarPx}}px;border-radius:2px"></span></td>
-    <td>{{.Coverage}}</td>
-    <td class="muted">{{.Started}}</td>
-  </tr>
+<div class="page-head"><div><h1>History &amp; trends</h1><div class="sub">New findings per run — longer bar is worse.</div></div></div>
+<div class="panel">
+  {{template "panelHead" "Runs over time"}}
+  {{if not .Rows}}{{template "emptyState" "No runs yet."}}{{else}}
+  <div class="table-wrap">
+  <table class="table">
+    <thead><tr><th>Run</th><th>Repo</th><th>Verdict</th><th class="num">New</th><th>Trend</th><th class="num">Changed-cov</th><th>Started</th></tr></thead>
+    <tbody>
+    {{range .Rows}}<tr>
+      <td><a class="primary mono" href="/runs/{{.ID}}">{{.ID}}</a></td>
+      <td>{{.Repo}}</td>
+      <td>{{template "verdict" .Verdict}}</td>
+      <td class="num">{{.New}}</td>
+      <td><span class="bar" style="width:{{.BarPx}}px"></span></td>
+      <td class="num">{{.Coverage}}</td>
+      <td class="muted">{{.Started}}</td>
+    </tr>{{end}}
+    </tbody>
+  </table>
+  </div>
   {{end}}
-</table>
-{{end}}
+</div>
 {{template "foot" .}}{{end}}

@@ -8,6 +8,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/gatehouse/gatehouse/internal/model"
@@ -40,8 +41,20 @@ func Open(path string) (*Store, error) {
 func (s *Store) Close() error { return s.db.Close() }
 
 func (s *Store) migrate() error {
-	_, err := s.db.Exec(schema)
-	return err
+	if _, err := s.db.Exec(schema); err != nil {
+		return err
+	}
+	// Additive column migrations for databases created by older versions.
+	// SQLite has no "ADD COLUMN IF NOT EXISTS", so ignore the duplicate error.
+	for _, stmt := range []string{
+		`ALTER TABLE findings ADD COLUMN snippet TEXT`,
+		`ALTER TABLE findings ADD COLUMN cwe_ids TEXT`,
+	} {
+		if _, err := s.db.Exec(stmt); err != nil && !strings.Contains(err.Error(), "duplicate column") {
+			return fmt.Errorf("migrate: %q: %w", stmt, err)
+		}
+	}
+	return nil
 }
 
 const schema = `
@@ -60,6 +73,13 @@ CREATE TABLE IF NOT EXISTS runs (
 );
 CREATE INDEX IF NOT EXISTS idx_runs_repo ON runs(repo_path, started_at);
 
+CREATE TABLE IF NOT EXISTS repos (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    path       TEXT NOT NULL UNIQUE,
+    name       TEXT,
+    created_at TEXT
+);
+
 CREATE TABLE IF NOT EXISTS findings (
     id          INTEGER PRIMARY KEY AUTOINCREMENT,
     run_id      TEXT NOT NULL REFERENCES runs(id) ON DELETE CASCADE,
@@ -72,6 +92,8 @@ CREATE TABLE IF NOT EXISTS findings (
     path        TEXT,
     start_line  INTEGER,
     end_line    INTEGER,
+    snippet     TEXT,
+    cwe_ids     TEXT,
     status      TEXT,
     waiver_id   TEXT
 );
@@ -152,10 +174,10 @@ func (s *Store) SaveRun(run model.Run) error {
 
 	for _, f := range run.Findings {
 		_, err = tx.Exec(`INSERT INTO findings
-            (run_id, fingerprint, family, rule_id, tool, severity, message, path, start_line, end_line, status, waiver_id)
-            VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`,
+            (run_id, fingerprint, family, rule_id, tool, severity, message, path, start_line, end_line, snippet, cwe_ids, status, waiver_id)
+            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
 			run.ID, f.Fingerprint, f.Family, f.RuleID, f.Tool, int(f.Severity),
-			f.Message, f.Path, f.StartLine, f.EndLine, f.Status, f.WaiverID)
+			f.Message, f.Path, f.StartLine, f.EndLine, f.Snippet, strings.Join(f.CWEIDs, ","), f.Status, f.WaiverID)
 		if err != nil {
 			return fmt.Errorf("insert finding: %w", err)
 		}
@@ -220,7 +242,7 @@ func (s *Store) LastFindings(repoPath, ref string) ([]model.Finding, error) {
 }
 
 func (s *Store) findingsForRun(runID string) ([]model.Finding, error) {
-	rows, err := s.db.Query(`SELECT fingerprint, family, rule_id, tool, severity, message, path, start_line, end_line, status, waiver_id
+	rows, err := s.db.Query(`SELECT fingerprint, family, rule_id, tool, severity, message, path, start_line, end_line, snippet, cwe_ids, status, waiver_id
         FROM findings WHERE run_id = ?`, runID)
 	if err != nil {
 		return nil, err
@@ -230,11 +252,15 @@ func (s *Store) findingsForRun(runID string) ([]model.Finding, error) {
 	for rows.Next() {
 		var f model.Finding
 		var sev int
+		var cwes string
 		if err := rows.Scan(&f.Fingerprint, &f.Family, &f.RuleID, &f.Tool, &sev,
-			&f.Message, &f.Path, &f.StartLine, &f.EndLine, &f.Status, &f.WaiverID); err != nil {
+			&f.Message, &f.Path, &f.StartLine, &f.EndLine, &f.Snippet, &cwes, &f.Status, &f.WaiverID); err != nil {
 			return nil, err
 		}
 		f.Severity = model.Severity(sev)
+		if cwes != "" {
+			f.CWEIDs = strings.Split(cwes, ",")
+		}
 		out = append(out, f)
 	}
 	return out, rows.Err()
@@ -245,7 +271,9 @@ func (s *Store) findingsForRun(runID string) ([]model.Finding, error) {
 func (s *Store) GetRun(id string) (*model.Run, []string, []string, error) {
 	var r model.Run
 	var profileJSON, started, finished string
-	err := s.db.QueryRow(`SELECT id, repo_path, ref, tree_hash, base_ref, context, verdict, status, profile_json, started_at, finished_at
+	err := s.db.QueryRow(`SELECT id, repo_path, COALESCE(ref,''), COALESCE(tree_hash,''), COALESCE(base_ref,''),
+        COALESCE(context,''), COALESCE(verdict,''), COALESCE(status,''), COALESCE(profile_json,'{}'),
+        COALESCE(started_at,''), COALESCE(finished_at,'')
         FROM runs WHERE id = ?`, id).Scan(&r.ID, &r.RepoPath, &r.Ref, &r.TreeHash, &r.BaseRef,
 		&r.Context, &r.Verdict, &r.Status, &profileJSON, &started, &finished)
 	if err == sql.ErrNoRows {
@@ -379,6 +407,82 @@ func (s *Store) TestHistory(repoPath, ref string, limit int) (map[string]TestOut
 	return out, rows.Err()
 }
 
+// Repo is a registered project the UI can scan.
+type Repo struct {
+	ID        int64
+	Path      string
+	Name      string
+	CreatedAt time.Time
+}
+
+// AddRepo registers a repo path (idempotent on path) and returns it.
+func (s *Store) AddRepo(path, name string) (Repo, error) {
+	_, err := s.db.Exec(`INSERT OR IGNORE INTO repos (path, name, created_at) VALUES (?,?,?)`,
+		path, name, time.Now().UTC().Format(time.RFC3339))
+	if err != nil {
+		return Repo{}, err
+	}
+	var r Repo
+	var created string
+	err = s.db.QueryRow(`SELECT id, path, name, created_at FROM repos WHERE path = ?`, path).
+		Scan(&r.ID, &r.Path, &r.Name, &created)
+	r.CreatedAt, _ = time.Parse(time.RFC3339, created)
+	return r, err
+}
+
+// ListRepos returns all registered repos, newest first.
+func (s *Store) ListRepos() ([]Repo, error) {
+	rows, err := s.db.Query(`SELECT id, path, name, created_at FROM repos ORDER BY created_at DESC`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var out []Repo
+	for rows.Next() {
+		var r Repo
+		var created string
+		if err := rows.Scan(&r.ID, &r.Path, &r.Name, &created); err != nil {
+			return nil, err
+		}
+		r.CreatedAt, _ = time.Parse(time.RFC3339, created)
+		out = append(out, r)
+	}
+	return out, rows.Err()
+}
+
+// GetRepo returns a repo by id.
+func (s *Store) GetRepo(id int64) (Repo, error) {
+	var r Repo
+	var created string
+	err := s.db.QueryRow(`SELECT id, path, name, created_at FROM repos WHERE id = ?`, id).
+		Scan(&r.ID, &r.Path, &r.Name, &created)
+	r.CreatedAt, _ = time.Parse(time.RFC3339, created)
+	return r, err
+}
+
+// InsertRunningRun records a placeholder row so the UI can show a scan in
+// progress before the orchestrator finishes and saves the full run.
+func (s *Store) InsertRunningRun(id, repoPath, ref string, ctx model.Context) error {
+	_, err := s.db.Exec(`INSERT OR REPLACE INTO runs
+        (id, repo_path, ref, context, verdict, status, started_at)
+        VALUES (?,?,?,?,?,?,?)`,
+		id, repoPath, ref, ctx, "", "running", time.Now().UTC().Format(time.RFC3339))
+	return err
+}
+
+// RunStatus returns a run's status (running|done|error) and verdict.
+func (s *Store) RunStatus(id string) (status string, verdict model.Verdict, err error) {
+	err = s.db.QueryRow(`SELECT status, verdict FROM runs WHERE id = ?`, id).Scan(&status, &verdict)
+	return status, verdict, err
+}
+
+// LatestRunForRepo returns the id of the most recent run for a repo path, or "".
+func (s *Store) LatestRunForRepo(repoPath string) string {
+	var id string
+	_ = s.db.QueryRow(`SELECT id FROM runs WHERE repo_path = ? ORDER BY started_at DESC LIMIT 1`, repoPath).Scan(&id)
+	return id
+}
+
 // RunSummary is a run plus the aggregate counts the history/trends view needs.
 type RunSummary struct {
 	Run             model.Run
@@ -439,7 +543,8 @@ func (s *Store) WaivedFindings(limit int) ([]model.Finding, error) {
 
 // RecentRuns returns the most recent runs across all repos, newest first.
 func (s *Store) RecentRuns(limit int) ([]model.Run, error) {
-	rows, err := s.db.Query(`SELECT id, repo_path, ref, base_ref, context, verdict, status, started_at, finished_at
+	rows, err := s.db.Query(`SELECT id, repo_path, COALESCE(ref,''), COALESCE(base_ref,''), COALESCE(context,''),
+        COALESCE(verdict,''), COALESCE(status,''), COALESCE(started_at,''), COALESCE(finished_at,'')
         FROM runs ORDER BY started_at DESC LIMIT ?`, limit)
 	if err != nil {
 		return nil, err

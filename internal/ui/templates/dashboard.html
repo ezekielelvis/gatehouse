@@ -1,19 +1,19 @@
 {{define "dashboard"}}{{template "head" .}}
-<h1>Recent runs</h1>
-{{if not .Runs}}
-  <p class="muted">No runs yet. Run <code>gatehouse scan .</code> to get started.</p>
-{{else}}
-<table>
-  <tr><th>Run</th><th>Repo</th><th>Context</th><th>Verdict</th><th>Started</th></tr>
-  {{range .Runs}}
-  <tr>
-    <td><a href="/runs/{{.ID}}"><code>{{.ID}}</code></a></td>
-    <td>{{.RepoShort}}</td>
-    <td>{{.Context}}</td>
-    <td><span class="verdict {{.Verdict}}">{{.Verdict}}</span></td>
-    <td class="muted">{{.Started}}</td>
-  </tr>
-  {{end}}
-</table>
+<div class="page-head"><div><h1>Dashboard</h1><div class="sub">Every scan, newest first — click a run to drill in.</div></div>
+  <a class="icon-btn" href="/projects">▶ Run a scan</a>
+</div>
+
+{{template "tiles" .Tiles}}
+
+{{if .Trend}}
+<div class="panel">
+  <div class="panel-head"><h2>New findings per run</h2><span class="label">last 30</span></div>
+  <div class="chart">{{.Trend}}</div>
+</div>
 {{end}}
+
+<div class="panel">
+  {{template "panelHead" "Runs"}}
+  {{if .Runs}}{{template "runsTable" .Runs}}{{else}}{{template "emptyState" "No runs yet. Add a project and run a scan."}}{{end}}
+</div>
 {{template "foot" .}}{{end}}

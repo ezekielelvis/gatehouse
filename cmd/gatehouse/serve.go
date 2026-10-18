@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/gatehouse/gatehouse/internal/enrich"
 	"github.com/gatehouse/gatehouse/internal/evidence"
 	"github.com/gatehouse/gatehouse/internal/store"
 	"github.com/gatehouse/gatehouse/internal/ui"
@@ -22,6 +23,9 @@ func cmdServe(args []string) int {
 	fs := flag.NewFlagSet("serve", flag.ExitOnError)
 	addr := fs.String("addr", "127.0.0.1:7420", "listen address (localhost only by default)")
 	dbPath := fs.String("db", defaultDBPath(), "SQLite database path")
+	pluginsDir := fs.String("plugins", "", "additional plugin manifest directory for UI-triggered scans")
+	noBuiltin := fs.Bool("no-builtin-plugins", false, "use only --plugins manifests for UI-triggered scans")
+	hostExec := fs.Bool("unsafe-host-exec", false, "DEV ONLY: run UI-triggered scans on the host with no sandbox")
 	fs.Parse(args)
 
 	st, err := store.Open(*dbPath)
@@ -47,6 +51,22 @@ func cmdServe(args []string) int {
 		KeyID:      keyID,
 		RetainPer:  50,
 	})
+
+	// Enable UI-triggered scans if a runtime is available. The runtime is
+	// created once and reused; policy/config/waivers are resolved per scan.
+	if rt := serveRuntime(*hostExec); rt != nil {
+		defer rt.Close()
+		plugs := loadServePlugins(*noBuiltin, *pluginsDir)
+		mirror, _ := enrich.Load(defaultMirrorPath())
+		audit, _ := evidence.OpenAuditLog(defaultAuditPath())
+		fmt.Printf("scanning enabled via %s\n", rt.Name())
+
+		uiServer.SetRunner(func(runID, repoPath, ref, _ string, progress func(string)) error {
+			return runServeScan(st, rt, plugs, mirror, audit, runID, repoPath, progress)
+		})
+	} else {
+		fmt.Println("scanning disabled (no container runtime; pass --unsafe-host-exec for a dev fallback)")
+	}
 
 	mux := http.NewServeMux()
 	uiServer.Routes(mux)

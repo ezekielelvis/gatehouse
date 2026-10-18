@@ -1,0 +1,50 @@
+{{/* Reusable UI components — small, data-driven, composed by the pages with
+     {{template "name" data}}. Keeping these as named templates means the
+     dashboard, run detail, history and htmx partials all render findings,
+     verdicts, metric tiles and tables through one implementation. */}}
+
+{{/* verdict pill — arg: a verdict string ("pass"|"warn"|"fail") */}}
+{{define "verdict"}}<span class="verdict {{.}}">{{.}}</span>{{end}}
+
+{{/* status dot+label — arg: {Class, Label} */}}
+{{define "statusCell"}}<span class="status status-{{.Class}}">{{.Label}}</span>{{end}}
+
+{{/* one metric tile — arg: {Label, Value} */}}
+{{define "tile"}}<div class="metric"><span class="metric-label">{{.Label}}</span><span class="metric-value">{{.Value}}</span></div>{{end}}
+
+{{/* a row of metric tiles — arg: slice of {Label, Value} */}}
+{{define "tiles"}}<div class="metric-grid">{{range .}}{{template "tile" .}}{{end}}</div>{{end}}
+
+{{/* empty state — arg: a message string */}}
+{{define "emptyState"}}<p class="empty">{{.}}</p>{{end}}
+
+{{/* panel heading — arg: a title string */}}
+{{define "panelHead"}}<div class="panel-head"><h2>{{.}}</h2></div>{{end}}
+
+{{/* one findings table row — arg: a model.Finding. Shows the offending code in
+     an expandable block when a snippet was captured. */}}
+{{define "findingRow"}}<tr>
+  <td><span class="status status-{{if eq (printf "%s" .Status) "new"}}fail{{else}}manual{{end}}">{{.Status}}</span>{{if .WaiverID}} <span class="muted">(waived)</span>{{end}}</td>
+  <td><span class="sev sev-{{.Severity}}">{{.Severity}}</span>{{if .KEV}} <span class="muted">· KEV</span>{{end}}</td>
+  <td><span class="primary mono">{{.RuleID}}</span><div class="muted">{{.Tool}}</div></td>
+  <td><code>{{.Path}}:{{.StartLine}}</code></td>
+  <td class="cell-msg">{{.Message}}
+    {{if .Snippet}}<details class="snippet"><summary>view code</summary><pre class="code">{{.Snippet}}</pre></details>{{end}}
+  </td>
+</tr>{{end}}
+
+{{/* a runs table — arg: slice of {ID, RepoShort, Context, Verdict, Started} */}}
+{{define "runsTable"}}<div class="table-wrap">
+<table class="table">
+  <thead><tr><th>Run</th><th>Repo</th><th>Context</th><th>Verdict</th><th>Started</th></tr></thead>
+  <tbody>
+  {{range .}}<tr>
+    <td><a class="primary mono" href="/runs/{{.ID}}">{{.ID}}</a></td>
+    <td>{{.RepoShort}}</td>
+    <td class="muted">{{.Context}}</td>
+    <td>{{template "verdict" .Verdict}}</td>
+    <td class="muted">{{.Started}}</td>
+  </tr>{{end}}
+  </tbody>
+</table>
+</div>{{end}}
